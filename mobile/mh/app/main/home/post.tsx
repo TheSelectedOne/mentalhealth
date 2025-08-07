@@ -1,3 +1,4 @@
+import { API_URL } from '@/constants/app-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from 'expo-router';
 import React, { useState } from 'react';
@@ -23,7 +24,7 @@ export default function CreatePostScreen() {
                 user_id: await AsyncStorage.getItem('username'),// Assuming you have a username stored
                 categories: [category], // Assuming addiction is stored
             }
-            const response = await fetch('http://192.168.1.132:3000/posts', {
+            const response = await fetch(API_URL + '/posts', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',

@@ -1,6 +1,6 @@
-import { clusterApiUrl } from '@solana/web3.js'
 import { Cluster } from '@/components/cluster/cluster'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
+import { clusterApiUrl } from '@solana/web3.js'
 
 export class AppConfig {
   static name = 'mh'
@@ -20,3 +20,7 @@ export class AppConfig {
     },
   ]
 }
+
+const API_URL = 'http://192.168.1.132:3000'
+
+export { API_URL }

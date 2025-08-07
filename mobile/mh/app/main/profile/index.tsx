@@ -1,4 +1,5 @@
 import { AppView } from '@/components/app-view';
+import { API_URL } from '@/constants/app-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
@@ -21,7 +22,7 @@ export default function Profile() {
     const [loading, setLoading] = React.useState(false);
     const getProfile = async () => {
         const username = await AsyncStorage.getItem('username');
-        const response = await fetch('http://192.168.1.132:3000/profiles/' + username);
+        const response = await fetch(API_URL + '/profiles/' + username);
         const data = await response.json();
         console.log('uuserData', data.userObj.postsDetails);
         if (response.status === 200) {

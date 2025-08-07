@@ -1,6 +1,7 @@
 import { AppText } from "@/components/app-text";
 import { AppView } from "@/components/app-view";
 import { useAuth } from "@/components/auth/auth-provider";
+import { API_URL } from "@/constants/app-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React from 'react';
@@ -27,7 +28,7 @@ export default function LinkWallet() {
         }
         console.log(dataObj);
         console.log(JSON.stringify(dataObj));
-        const response = await fetch('http://192.168.1.132:3000/signup', {
+        const response = await fetch(API_URL + '/signup', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',

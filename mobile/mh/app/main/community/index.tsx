@@ -1,3 +1,4 @@
+import { API_URL } from '@/constants/app-config';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
@@ -69,7 +70,7 @@ export default function PostFeedScreen() {
                 : post
         ));
 
-        const response = await fetch('http://192.168.1.132:3000/posts/' + id + '/like', {
+        const response = await fetch(API_URL + id + '/like', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
