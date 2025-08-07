@@ -23,3 +23,7 @@ npm install
 npm run android
 ```
 
+
+## to know
+1. Project runs on dev mode which means on your wallet provider you have to set network to devnet
+
