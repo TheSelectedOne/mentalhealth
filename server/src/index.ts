@@ -50,16 +50,42 @@ const main = async () => {
         res.status(201).json({ message: 'Post created' });
     })
 
-    app.get('/posts/recent', async (_: Request, res: Response) => {
-        const postIds = await RedisClient.lrange('timeline', 0, 9);
-        const posts = await Promise.all(
-            postIds.map(async (id: string) => await RedisClient.hgetall(`post:${id}`))
-            // get post likes
+    app.get('/posts/recent', async (req: Request, res: Response) => {
+        try {
+            const { user_id } = req.query; // Or from auth middleware if you have authentication
 
-        );
-        console.log(posts);
-        res.json({ posts });
+            const postIds = await RedisClient.lrange('timeline', 0, 9);
+
+            const posts = await Promise.all(
+                postIds.map(async (id: string) => {
+                    // Get post data
+                    const post = await RedisClient.hgetall(`post:${id}`);
+
+                    // Count total likes
+                    const likesCount = await RedisClient.scard(`post:${id}:likes`);
+
+                    // Check if current user liked it
+                    let likedByCurrentUser = false;
+                    if (user_id) {
+                        likedByCurrentUser = (await RedisClient.sismember(`post:${id}:likes`, user_id)) === 1;
+                    }
+
+                    return {
+                        id,
+                        ...post,
+                        likes: likesCount,
+                        likedByCurrentUser
+                    };
+                })
+            );
+
+            res.json({ posts });
+        } catch (error) {
+            console.error('Error fetching recent posts:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     });
+
 
     app.get('/posts/:userId', async (req: Request, res: Response) => {
         const { userId } = req.params;
@@ -101,7 +127,24 @@ const main = async () => {
         const posts = await RedisClient.lrange(`posts:${userId}`, 0, -1);
         // Fetch posts for the user
         const postsDetails = await Promise.all(
-            posts.map(async (postId: string) => await RedisClient.hgetall(`post:${postId}`))
+            posts.map(async (postId: string) => {
+                const post = await RedisClient.hgetall(`post:${postId}`)
+                const likesCount = await RedisClient.scard(`post:${postId}:likes`);
+
+                // Check if current user liked it
+                let likedByCurrentUser = false;
+                if (userId) {
+                    likedByCurrentUser = (await RedisClient.sismember(`post:${postId}:likes`, userId)) === 1;
+                }
+
+                return {
+                    id: postId,
+                    ...post,
+                    likes: likesCount,
+                    likedByCurrentUser
+                };
+            })
+
         );
         // Combine user data with posts details
         const userObj = {

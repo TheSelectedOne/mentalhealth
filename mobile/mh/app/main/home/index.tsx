@@ -3,13 +3,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 
+const MILESTONE_DAYS = 30;
 
-const MILESTONE_DAYS = 30
 export default function DashboardScreen() {
     const [daysFree, setDaysFree] = useState(null);
     const [reason, setReason] = useState('');
-    const [addiciton, setAddiction] = useState('');
+    const [addiction, setAddiction] = useState('');
     const { signOut } = useAuth();
     const navigation = useNavigation();
 
@@ -21,8 +23,8 @@ export default function DashboardScreen() {
         const loadData = async () => {
             const quitDateStr = await AsyncStorage.getItem('startDate');
             const quitReason = await AsyncStorage.getItem('reason');
-            const addiction = await AsyncStorage.getItem('addiction');
-            setAddiction(addiction || 'No addiction provided.');
+            const addictionType = await AsyncStorage.getItem('addiction');
+            setAddiction(addictionType || 'No addiction provided.');
             setReason(quitReason || 'No reason provided.');
 
             if (quitDateStr) {
@@ -35,31 +37,43 @@ export default function DashboardScreen() {
         loadData();
     }, []);
 
-    const handleSignOut = async () => {
+    const handleSignOut = () => {
         signOut();
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.centerArea}>
-                <Text style={styles.headerText}>You're {daysFree !== null ? daysFree : '--'} days {addiciton} free</Text>
-                <View style={styles.reasonBox}>
+                <Text style={styles.headerText}>
+                    You're {daysFree !== null ? daysFree : '--'} days {addiction} free
+                </Text>
+
+                {/* Reason Box */}
+                <BlurView intensity={70} tint="dark" style={styles.reasonBox}>
                     <Text style={styles.reasonTitle}>Your Reason for Quitting:</Text>
                     <Text style={styles.reasonText}>{reason}</Text>
-                </View>
-                <View style={styles.progressBarBackground}>
-                    <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
+                </BlurView>
+
+                {/* Glassmorphic Progress Bar */}
+                <BlurView intensity={70} tint="dark" style={styles.progressBarBackground}>
+                    <LinearGradient
+                        colors={['#14F1B2', '#8DFFF0']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={[styles.progressBarFill, { width: `${progressPercent}%` }]}
+                    />
                     <Text style={styles.progressText}>
                         Milestone {milestoneNumber}: {progressDays}/{MILESTONE_DAYS} days
                     </Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.postButton}
-                    onPress={() => navigation.navigate('post')}
-                >
+                </BlurView>
+
+                {/* Post Button */}
+                <TouchableOpacity style={styles.postButton} onPress={() => navigation.navigate('post')}>
                     <Text style={styles.postButtonText}>Make a Post</Text>
                 </TouchableOpacity>
             </View>
+
+            {/* Sign Out */}
             <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
                 <Text style={styles.signOutText}>Sign Out</Text>
             </TouchableOpacity>
@@ -68,30 +82,6 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-    progressBarBackground: {
-        width: '100%',
-        height: 26,
-        backgroundColor: '#134156',
-        borderRadius: 13,
-        overflow: 'hidden',
-        marginBottom: 30,
-        justifyContent: 'center',
-    },
-    progressBarFill: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        backgroundColor: '#14F1B2',
-        borderRadius: 13,
-    },
-    progressText: {
-        color: '#0E151A',
-        fontWeight: 'bold',
-        fontSize: 16,
-        textAlign: 'center',
-        zIndex: 1,
-    },
     container: {
         flex: 1,
         backgroundColor: '#0E151A',
@@ -104,18 +94,23 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     headerText: {
-        color: '#14F1B2',
+        color: '#8DFFF0',
         fontSize: 26,
         fontWeight: 'bold',
         marginBottom: 30,
         textAlign: 'center',
+        textShadowColor: 'rgba(0, 180, 159, 0.6)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 4,
     },
     reasonBox: {
         width: '100%',
-        backgroundColor: '#134156',
-        borderRadius: 12,
+        // borderRadius: 16,
         padding: 18,
         marginBottom: 24,
+        borderWidth: 1,
+        borderColor: 'rgba(197, 255, 248, 0.4)',
+        overflow: 'hidden',
     },
     reasonTitle: {
         color: '#14F1B2',
@@ -127,15 +122,47 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
     },
+    progressBarBackground: {
+        width: '100%',
+        height: 30,
+        // borderRadius: 15,
+        marginBottom: 30,
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(197, 255, 248, 0.4)',
+        overflow: 'hidden',
+        shadowColor: '#14F1B2',
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    progressBarFill: {
+        height: '100%',
+        // borderRadius: 15,
+    },
+    progressText: {
+        position: 'absolute',
+        width: '100%',
+        textAlign: 'center',
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
     postButton: {
-        backgroundColor: '#14F1B2',
-        borderRadius: 10,
+        backgroundColor: 'rgba(0, 180, 159, 0.3)',
+        // borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 40,
         marginTop: 16,
+        borderWidth: 1,
+        borderColor: '#00B49F',
+        shadowColor: '#00B49F',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
     },
     postButtonText: {
-        color: '#0E151A',
+        color: '#C5FFF8',
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -144,10 +171,10 @@ const styles = StyleSheet.create({
         marginBottom: 28,
         paddingVertical: 12,
         paddingHorizontal: 30,
-        borderRadius: 10,
-        borderWidth: 2,
+        // borderRadius: 10,
+        borderWidth: 1,
         borderColor: '#14F1B2',
-        backgroundColor: 'transparent',
+        backgroundColor: 'rgba(20, 241, 178, 0.1)',
     },
     signOutText: {
         color: '#14F1B2',

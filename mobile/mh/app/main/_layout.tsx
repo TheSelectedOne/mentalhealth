@@ -59,6 +59,20 @@ export default function Layout() {
                     ),
                 }}
             />
+            <Tabs.Screen
+                name="milestones"
+                options={{
+                    tabBarLabel: "Milestones",
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <Feather
+                            name='award'
+                            color={color}
+                            size={size ?? 24}
+                            style={{ opacity: focused ? 1 : 0.6 }}
+                        />
+                    ),
+                }}
+            />
         </Tabs>
     );
 }
