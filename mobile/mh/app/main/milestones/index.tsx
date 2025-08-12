@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import {
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    View,
-    FlatList,
-    Image,
-} from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View, Image, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const { width } = Dimensions.get('window');
+const BOX_SIZE = (width - 60) / 2;  // two columns with 20px padding and 20px gap
 const MILESTONES = [
     { days: 30, label: '30 Days', image: require('./icon.png') },
     { days: 60, label: '60 Days', image: require('./icon.png') },
@@ -20,134 +17,137 @@ const MILESTONES = [
 ];
 
 export default function MilestonesScreen() {
-    const [daysFree, setDaysFree] = useState(null);
+    const [daysFree, setDaysFree] = useState(0);
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        const loadDaysFree = async () => {
-            const quitDateStr = await AsyncStorage.getItem('startDate');
-            if (quitDateStr) {
-                const startDate = new Date(quitDateStr);
+        (async () => {
+            const startDateStr = await AsyncStorage.getItem('startDate');
+            if (startDateStr) {
+                const start = new Date(startDateStr);
                 const now = new Date();
-                const diffMs = now.getTime() - startDate.getTime();
-                setDaysFree(Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+                const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+                setDaysFree(diff);
             }
-        };
-        loadDaysFree();
+        })();
     }, []);
 
-    const renderMilestone = ({ item }) => {
-        const unlocked = daysFree !== null && daysFree >= item.days;
-
-        return (
-            <BlurView intensity={70} tint="dark" style={styles.milestoneBox}>
-                <View style={styles.imageContainer}>
-                    <Image source={item.image} style={[styles.milestoneImage, unlocked ? styles.unlockedImage : styles.lockedImage]} />
-                    {unlocked && (
-                        <View style={styles.checkIconContainer}>
-                            <MaterialCommunityIcons name="check-circle" size={22} color="#14F1B2" />
-                        </View>
-                    )}
-                </View>
-                <Text style={[styles.milestoneLabel, unlocked ? styles.unlockedText : styles.lockedText]}>
-                    {item.label}
-                </Text>
-                <Text style={[styles.milestoneStatus, unlocked ? styles.unlockedText : styles.lockedText]}>
-                    {unlocked ? 'Unlocked' : 'Locked'}
-                </Text>
-            </BlurView>
-        );
-    };
-
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.header}>Your Milestones</Text>
-            {daysFree === null ? (
-                <Text style={styles.loadingText}>Loading...</Text>
-            ) : (
-                <FlatList
-                    data={MILESTONES}
-                    renderItem={renderMilestone}
-                    keyExtractor={(item) => item.days.toString()}
-                    horizontal={false}
-                    numColumns={2}
-                    contentContainerStyle={styles.listContainer}
-                    showsVerticalScrollIndicator={false}
-                />
-            )}
+        <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+            <LinearGradient
+                colors={['#0E151A', '#134156', '#0E151A']}
+                style={StyleSheet.absoluteFill}
+            />
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <Text style={styles.header}>Milestones</Text>
+                <Text style={styles.subheader}>
+                    Celebrate each step of your journey
+                </Text>
+
+                <View style={styles.grid}>
+                    {MILESTONES.map((m) => {
+                        const unlocked = daysFree >= m.days;
+                        return (
+                            <BlurView
+                                key={m.days}
+                                tint="dark"
+                                intensity={50}
+                                style={[styles.box, unlocked && styles.boxUnlocked]}
+                            >
+                                <LinearGradient
+                                    colors={['rgba(141,255,240,0.03)', 'rgba(0,180,159,0.06)']}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                                <Image
+                                    source={m.image}
+                                    style={[styles.image, unlocked ? null : { opacity: 0.3 }]}
+                                />
+                                {unlocked && (
+                                    <View style={styles.checkIcon}>
+                                        <MaterialCommunityIcons
+                                            name="check-circle"
+                                            size={24}
+                                            color="#14F1B2"
+                                        />
+                                    </View>
+                                )}
+                                <Text style={[styles.label, unlocked ? styles.textUnlock : styles.textLock]}>
+                                    {m.label}
+                                </Text>
+                                <Text style={[styles.status, unlocked ? styles.textUnlock : styles.textLock]}>
+                                    {unlocked ? 'Unlocked!' : 'Locked'}
+                                </Text>
+                            </BlurView>
+                        );
+                    })}
+                </View>
+
+                <View style={{ height: 40 }} />
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
-const BOX_SIZE = 140;
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0E151A',
-        padding: 20,
-    },
+    container: { flex: 1, backgroundColor: '#0E151A' },
+    scrollContent: { paddingHorizontal: 20, paddingBottom: 20 },
     header: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: 'bold',
-        color: '#14F1B2',
-        marginBottom: 24,
-        textAlign: 'center',
-    },
-    loadingText: {
-        color: '#14F1B2',
-        textAlign: 'center',
+        color: '#8DFFF0',
         marginTop: 20,
+        marginBottom: 4,
     },
-    listContainer: {
+    subheader: {
+        fontSize: 16,
+        color: '#C5FFF8',
+        marginBottom: 20,
+        opacity: 0.8,
+    },
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         justifyContent: 'space-between',
+        gap: 20,
     },
-    milestoneBox: {
-        flex: 1,
-        margin: 10,
-        maxWidth: BOX_SIZE,
-        aspectRatio: 1,
-        // borderRadius: 20,
-        padding: 18,
+    box: {
+        width: BOX_SIZE,
+        height: BOX_SIZE,
+        borderRadius: 20,
+        marginBottom: 20,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(20, 180, 159, 0.3)',
-        backgroundColor: 'rgba(19, 65, 86, 0.5)',
+        borderColor: 'rgba(197,255,248,0.15)',
+        backgroundColor: 'rgba(19,65,86,0.3)',
+        overflow: 'hidden',
     },
-    imageContainer: {
-        position: 'relative',
+    boxUnlocked: {
+        borderColor: '#14F1B2',
+        backgroundColor: 'rgba(20,241,178,0.08)',
+    },
+    image: {
+        width: BOX_SIZE * 0.5,
+        height: BOX_SIZE * 0.5,
         marginBottom: 12,
     },
-    milestoneImage: {
-        width: 72,
-        height: 72,
-        // borderRadius: 36,
-    },
-    unlockedImage: {
-        opacity: 1,
-    },
-    lockedImage: {
-        opacity: 0.3,
-    },
-    checkIconContainer: {
+    checkIcon: {
         position: 'absolute',
-        bottom: -4,
-        right: -4,
-        backgroundColor: '#0E151A',
-        borderRadius: 16,
+        top: 8,
+        right: 8,
     },
-    milestoneLabel: {
-        fontWeight: 'bold',
+    label: {
         fontSize: 18,
+        fontWeight: '600',
         marginBottom: 4,
     },
-    milestoneStatus: {
+    status: {
         fontSize: 14,
+        opacity: 0.8,
     },
-    unlockedText: {
-        color: '#14F1B2',
-    },
-    lockedText: {
-        color: '#7daabb',
-    },
+    textUnlock: { color: '#14F1B2' },
+    textLock: { color: '#7daabb' },
 });

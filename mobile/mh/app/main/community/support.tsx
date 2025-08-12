@@ -1,76 +1,44 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    KeyboardAvoidingView,
-    Platform,
-    Alert,
-    SafeAreaView,
-    Dimensions
+    View, Text, TextInput, TouchableOpacity,
+    StyleSheet, KeyboardAvoidingView, Platform,
+    Alert, SafeAreaView, Dimensions
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { API_URL } from '@/constants/app-config';
-import { useNavigation } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
-export default function CreatePostScreen() {
-    const [storyText, setStoryText] = useState('');
-    const [submitting, setSubmitting] = useState(false);
+export default function SupportScreen() {
+    // 1. Use useSearchParams to grab query params
+    const { postId, author } = useLocalSearchParams<{ postId: string; author: string }>();
+    const router = useRouter();
+    const [message, setMessage] = useState('');
+    const [sending, setSending] = useState(false);
     const insets = useSafeAreaInsets();
-    const navigation = useNavigation();
 
-    const handlePost = async () => {
-        if (storyText.trim().length === 0) {
-            Alert.alert('Please write something before posting.');
+    const handleSupport = async () => {
+        if (!message.trim()) {
+            Alert.alert('Please write a message to support.');
             return;
         }
-        setSubmitting(true);
+        setSending(true);
         try {
-            // TODO: Replace this with your actual API call
-            // await new Promise((res) => setTimeout(res, 800)); // Simulated request
-            const category = await AsyncStorage.getItem('addiction'); // Assuming you have a category stored
-            const dataObj = {
-                body: storyText,
-                user_id: await AsyncStorage.getItem('username'),// Assuming you have a username stored
-                categories: [category], // Assuming addiction is stored
-            }
-            const response = await fetch(API_URL + '/posts', {
+            await fetch(`https://your-api/posts/${postId}/support`, {
                 method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dataObj),
-            })
-            const data = await response.json();
-            console.log(data);
-            if (response.status === 201) {
-                console.log('Data sent successfully');
-            }
-            else {
-                console.log('Error sending data');
-            }
-            Alert.alert('Success', 'Your post has been submitted!');
-            setStoryText('');
-            navigation.goBack(); // or navigate as needed
-        } catch (e) {
-            Alert.alert('Error', 'Failed to post.');
-        } finally {
-            setSubmitting(false);
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message }),
+            });
+            Alert.alert('Sent', `Your support message was sent to ${author}.`);
+            setMessage('');
+            router.back();      // 2. Use router.back() to go back
+        } catch {
+            Alert.alert('Error', 'Could not send support. Please try again.');
         }
-    };
-
-    const handleCancel = () => {
-        setStoryText('');
-        navigation.goBack();
+        setSending(false);
     };
 
     return (
@@ -86,33 +54,33 @@ export default function CreatePostScreen() {
                     />
 
                     <View style={styles.header}>
-                        <MaterialCommunityIcons name="heart" size={28} color="#00B49F" />
-                        <Text style={styles.headerText}>Share Your Story</Text>
+                        <MaterialCommunityIcons name="heart-multiple" size={28} color="#8DFFF0" />
+                        <Text style={styles.headerText}>Support {author}</Text>
                     </View>
 
                     <TextInput
                         style={styles.textInput}
-                        placeholder="Write what you’re feeling…"
+                        placeholder="Write your supportive message…"
                         placeholderTextColor="rgba(197,255,248,0.6)"
                         multiline
-                        value={storyText}
-                        onChangeText={setStoryText}
+                        value={message}
+                        onChangeText={setMessage}
                         textAlignVertical="top"
                     />
 
                     <TouchableOpacity
                         style={styles.submitButton}
-                        onPress={handlePost}
-                        disabled={submitting}
+                        onPress={handleSupport}
+                        disabled={sending}
                     >
                         <LinearGradient
-                            colors={['#00B49F', '#14F1B2']}
+                            colors={['#14F1B2', '#8DFFF0']}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.buttonGradient}
                         >
                             <Text style={styles.submitText}>
-                                {submitting ? 'Sharing…' : 'Share Story'}
+                                {sending ? 'Sending…' : 'Send Support'}
                             </Text>
                         </LinearGradient>
                     </TouchableOpacity>
@@ -124,10 +92,7 @@ export default function CreatePostScreen() {
 
 const styles = StyleSheet.create({
     flex: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    container: {
-        flex: 1,
-        backgroundColor: '#0E151A',
-    },
+    container: { flex: 1, backgroundColor: '#0E151A' },
     card: {
         width: width - 40,
         borderRadius: 24,
@@ -143,13 +108,9 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         gap: 10,
     },
-    headerText: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#8DFFF0',
-    },
+    headerText: { fontSize: 20, fontWeight: '600', color: '#8DFFF0' },
     textInput: {
-        height: 160,
+        height: 140,
         backgroundColor: 'rgba(19,65,86,0.25)',
         borderRadius: 14,
         padding: 14,
@@ -162,7 +123,7 @@ const styles = StyleSheet.create({
     submitButton: {
         borderRadius: 16,
         overflow: 'hidden',
-        shadowColor: '#00B49F',
+        shadowColor: '#8DFFF0',
         shadowOpacity: 0.3,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
