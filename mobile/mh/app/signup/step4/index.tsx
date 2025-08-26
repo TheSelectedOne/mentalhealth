@@ -1,120 +1,183 @@
 import { AppText } from "@/components/app-text";
-import { AppView } from "@/components/app-view";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "expo-router";
-import React from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
-import { Button, TextInput } from "react-native-paper";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+    Dimensions,
+    SafeAreaView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { width } = Dimensions.get("window");
 
 export default function Step4() {
-    const navigation = useNavigation();
-    const [value, setValue] = React.useState('');
-    const setStorage = async (key: string, value: string) => {
+    const router = useRouter();
+    const [value, setValue] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const insets = useSafeAreaInsets();
+
+    const setStorage = async (key, val) => {
         try {
-            await AsyncStorage.setItem(key, value);
-        } catch (error) {
-            console.log(error);
-        }
+            await AsyncStorage.setItem(key, val);
+        } catch (e) { console.log(e); }
     };
+
     const nextBtn = async () => {
-        await setStorage('username', value);
-        navigation.navigate('linkwallet');
-    }
+        if (!value.trim()) return;
+        setIsLoading(true);
+        await setStorage("username", value.trim());
+        router.push("/signup/linkwallet");
+        setIsLoading(false);
+    };
+
     return (
-        <AppView style={styles.container}>
-            <View style={styles.flexItemTop}>
-                <View style={styles.round} />
-                <View style={styles.round} />
-                <View style={styles.round} />
-                <View style={styles.roundActive} />
-                <View style={styles.round} />
-            </View>
-            <AppText variant="headlineSmall" style={styles.textCenter} >Add your username</AppText>
-            <View style={styles.padItem}>
-                <TextInput onChangeText={(text) => setValue(text)} underlineColorAndroid="transparent" placeholderTextColor={'gray'} textColor="#fff" outlineColor="#134156" mode="outlined" placeholder="Username" style={styles.textarea} />
-            </View>
-            <View>
-                <Button
-                    mode="contained"
-                    onPress={() => nextBtn()}
-                    style={{ margin: 16, backgroundColor: '#14F1B2' }}
-                >
-                    <AppText>Next</AppText>
-                </Button>
-            </View>
-        </AppView>
-    )
+        <LinearGradient
+            colors={["#0E151A", "#134156", "#0E151A"]}
+            locations={[0, 0.6, 1]}
+            style={[styles.container, { paddingTop: insets.top }]}
+        >
+            <SafeAreaView style={styles.safeArea}>
+                {/* Progress */}
+                <View style={styles.progressSection}>
+                    <View style={styles.progressContainer}>
+                        <View style={styles.progressInactive} />
+                        <View style={styles.progressInactive} />
+                        <View style={styles.progressInactive} />
+                        <View style={styles.progressActive} />
+                        <View style={styles.progressInactive} />
+                    </View>
+                    <AppText style={styles.stepText}>Step 4 of 5</AppText>
+                </View>
+
+                {/* Header */}
+                <View style={styles.headerSection}>
+                    <View style={styles.iconContainer}>
+                        <MaterialCommunityIcons
+                            name="account-circle-outline"
+                            size={32}
+                            color="#8DFFF0"
+                        />
+                    </View>
+                    <AppText variant="headlineSmall" style={styles.title}>
+                        Choose a username
+                    </AppText>
+                    <AppText style={styles.subtitle}>
+                        This will identify you in the community
+                    </AppText>
+                </View>
+
+                {/* Input Card */}
+                <BlurView intensity={20} tint="dark" style={styles.inputCard}>
+                    <LinearGradient
+                        colors={["rgba(141,255,240,0.05)", "rgba(0,180,159,0.08)"]}
+                        style={styles.cardGradient}
+                    />
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="Your username"
+                        placeholderTextColor="rgba(197,255,248,0.6)"
+                        value={value}
+                        onChangeText={setValue}
+                        maxLength={20}
+                    />
+                </BlurView>
+
+                {/* Next Button */}
+                <View style={[styles.buttonSection, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+                    <TouchableOpacity
+                        style={[styles.nextButton, (!value.trim() || isLoading) && styles.nextButtonDisabled]}
+                        onPress={nextBtn}
+                        disabled={!value.trim() || isLoading}
+                    >
+                        <LinearGradient
+                            colors={
+                                value.trim()
+                                    ? ["#00B49F", "#14F1B2"]
+                                    : ["rgba(0,180,159,0.3)", "rgba(20,241,178,0.3)"]
+                            }
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.buttonGradient}
+                        >
+                            <AppText style={[
+                                styles.buttonText,
+                                (!value.trim() || isLoading) && styles.buttonTextDisabled
+                            ]}>
+                                {isLoading ? "Saving..." : "Continue"}
+                            </AppText>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        </LinearGradient>
+    );
 }
 
-
-
 const styles = StyleSheet.create({
-    textCenter: {
-        textAlign: "center",
-        color: "#ffffff"
+    container: { flex: 1 },
+    safeArea: { flex: 1, paddingHorizontal: 20 },
+    progressSection: { alignItems: "center", paddingTop: 20, paddingBottom: 30 },
+    progressContainer: { flexDirection: "row", gap: 12, marginBottom: 8 },
+    progressActive: {
+        width: 32, height: 6, backgroundColor: "#14F1B2",
+        borderRadius: 3, shadowColor: "#14F1B2",
+        shadowOpacity: 0.5, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }
     },
-    textColor: {
-        color: "#ffffff"
+    progressInactive: {
+        width: 12, height: 6, backgroundColor: "rgba(197,255,248,0.3)",
+        borderRadius: 3
     },
-    container: {
-        backgroundColor: '#0E151A',
-        height: '100%',
-        // flex: 1,
-        // justifyContent: "center",
-        // alignItems: "center",
-        paddingTop: StatusBar.currentHeight
+    stepText: { color: "#C5FFF8", fontSize: 14, opacity: 0.8 },
+    headerSection: { alignItems: "center", marginBottom: 32 },
+    iconContainer: {
+        width: 64, height: 64, backgroundColor: "rgba(141,255,240,0.1)",
+        borderRadius: 32, justifyContent: "center", alignItems: "center",
+        marginBottom: 16, borderWidth: 1, borderColor: "rgba(141,255,240,0.2)"
     },
-    flexItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#14F1B2',
-        borderRadius: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginVertical: 6,
-
+    title: {
+        color: "#8DFFF0", textAlign: "center",
+        marginBottom: 8, fontSize: 24, fontWeight: "bold"
     },
-    padItem: {
-        padding: 8
+    subtitle: {
+        color: "#C5FFF8", textAlign: "center",
+        fontSize: 16, opacity: 0.8
     },
-    bottomButton: {
-
+    inputCard: {
+        borderRadius: 24, padding: 24, marginBottom: 16,
+        borderWidth: 1, borderColor: "rgba(197,255,248,0.15)",
+        backgroundColor: "rgba(19,65,86,0.3)", overflow: "hidden"
     },
-    textarea: {
-        height: 64, // Adjust as needed
-        borderColor: '#134156',
-        borderWidth: 1,
-        borderRadius: 6,
-        padding: 8,
-        fontSize: 16,
-        textAlignVertical: 'top',
-        marginTop: 16,
-        backgroundColor: '#0E151A',
-        color: '#ffffff',
+    cardGradient: {
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0
     },
-    flexItemTop: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-
-        borderRadius: 8,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        marginVertical: 6,
-
+    textInput: {
+        backgroundColor: "rgba(19,65,86,0.4)", color: "#FFFFFF",
+        borderRadius: 16, padding: 16, fontSize: 16
     },
-    round: {
-        borderRadius: 50,
-        width: 8,
-        height: 8,
-        backgroundColor: '#134156'
+    buttonSection: { paddingTop: 20 },
+    nextButton: {
+        borderRadius: 16, overflow: "hidden",
+        shadowColor: "#00B49F", shadowOpacity: 0.4,
+        shadowRadius: 12, shadowOffset: { width: 0, height: 4 }
     },
-    roundActive: {
-        borderRadius: 50,
-        width: 8,
-        height: 8,
-        backgroundColor: '#14F1B2'
+    nextButtonDisabled: {
+        shadowOpacity: 0.1
+    },
+    buttonGradient: {
+        alignItems: "center", justifyContent: "center",
+        paddingVertical: 16, paddingHorizontal: 24
+    },
+    buttonText: {
+        fontSize: 16, fontWeight: "bold", color: "#0E151A"
+    },
+    buttonTextDisabled: {
+        color: "rgba(14,21,26,0.5)"
     }
-})
+});

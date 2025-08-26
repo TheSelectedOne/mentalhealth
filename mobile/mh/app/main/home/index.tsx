@@ -60,7 +60,7 @@ export default function DashboardScreen() {
                         </Text>
                         <Text style={styles.addictionText}>{addiction} free</Text>
                     </View>
-                    <TouchableOpacity style={styles.profileButton}>
+                    <TouchableOpacity onPress={() => handleSignOut()} style={styles.profileButton}>
                         <Feather name="user" size={24} color="#8DFFF0" />
                     </TouchableOpacity>
                 </View>
