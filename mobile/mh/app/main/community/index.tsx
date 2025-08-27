@@ -1,15 +1,17 @@
 import { API_URL } from '@/constants/app-config';
-import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
-import {
-    ActivityIndicator, FlatList, StyleSheet, Text, TextInput,
-    TouchableOpacity, View, Dimensions
-} from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Dimensions,
+    FlatList, StyleSheet, Text, TextInput,
+    TouchableOpacity, View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -25,7 +27,7 @@ export default function CommunityScreen() {
     const getRecentPosts = async () => {
         setLoading(true);
         try {
-            const response = await fetch('http://192.168.1.132:3000/posts/recent?user_id=' + await AsyncStorage.getItem('username'));
+            const response = await fetch(API_URL + '/posts/recent?user_id=' + await AsyncStorage.getItem('username'));
             const data = await response.json();
             console.log('Fetched posts:', data.posts);
             const formattedData = data.posts.map((post) => ({
